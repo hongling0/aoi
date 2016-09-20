@@ -295,8 +295,8 @@ aoi_destory(struct aoi_space* aoi){
 	aoi_vec_release(&aoi->move);
 	STATICS.aoi_count--;
 	_free(aoi);
-	pool_release_obj_node();
-	pool_release_aoi_obj();
+	//pool_release_obj_node();
+	//pool_release_aoi_obj();
 }
 
 static struct obj_node *
