@@ -27,4 +27,6 @@ int aoi_getpos(struct aoi_space* aoi,int id,int *x,int *y);
 void aoi_printx(struct aoi_space* aoi);
 void aoi_printy(struct aoi_space* aoi);
 
+size_t aoi_statics_memory();
+
 #endif

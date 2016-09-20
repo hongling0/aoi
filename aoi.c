@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <math.h>
 
+
 #include "aoi.h"
 #include "list.h"
 
@@ -17,6 +18,29 @@
 #define AOI_TYPE_MOVE	1
 #define AOI_TYPE_IN		2
 #define AOI_TYPE_OUT	3
+
+static struct statics{
+	size_t memuse;
+	size_t aoi_count;
+} STATICS;
+
+#include <malloc.h>
+static inline void*
+_malloc(size_t size){
+	void *ret=malloc(size);
+	if(ret){
+		STATICS.memuse+=malloc_usable_size(ret);
+	}
+	return ret;
+}
+
+static inline void
+_free(void *ptr){
+	if(ptr){
+		STATICS.memuse-=malloc_usable_size(ptr);
+	}
+	free(ptr);
+}
 
 struct obj_set{
 	size_t cap;
@@ -65,14 +89,14 @@ struct aoi_space{
 static list_node __poll_root_##name;\
 static inline void pool_release_##name() {\
 	typename* node,*next;\
-	list_for_each_entry_safe(node,next,&__poll_root_##name,list){free(node);}\
+	list_for_each_entry_safe(node,next,&__poll_root_##name,list){_free(node);}\
 	init_list_node(&__poll_root_##name);\
 }\
 static inline void pool_init_##name(){init_list_node(&__poll_root_##name);atexit(pool_release_##name);}\
 static inline typename* pool_alloc_##name() {\
 	typename* node;\
 	if(!__poll_root_##name.next){pool_init_##name();}\
-	if(list_empty(&__poll_root_##name)){node=(typename*)malloc(sizeof(typename));}\
+	if(list_empty(&__poll_root_##name)){node=(typename*)_malloc(sizeof(typename));}\
 	else{node=list_first_entry(&__poll_root_##name,typename,list);list_del(&node->list);}\
 	return node;\
 }\
@@ -94,9 +118,9 @@ aoi_vec_append(struct aoi_vec *v,int val){
 	size_t cap;
 	if(v->cnt==v->cap){
 		cap=v->cap*2;
-		array=malloc(cap*sizeof(*v->array)-sizeof(v->slot)/sizeof(v->slot[0]));
-		memcpy(array,v->array,sizeof(*v->array)*v->cap);
-		free(v->array);
+		array=_malloc(cap*sizeof(*v->array)-sizeof(v->slot)/sizeof(v->slot[0]));
+		memcpy(array,v->array,sizeof(*v->array)*(v->cap-sizeof(v->slot)/sizeof(v->slot[0])));
+		_free(v->array);
 		v->array=array;
 		v->cap=cap;
 	}
@@ -127,7 +151,14 @@ aoi_vec_count(struct aoi_vec *v){
 
 void
 aoi_vec_reset(struct aoi_vec *v){
-	free(v->array);
+	//_free(v->array);
+	//aoi_vec_init(v);
+	v->cnt=0;
+}
+
+void
+aoi_vec_release(struct aoi_vec *v){
+	_free(v->array);
 	aoi_vec_init(v);
 }
 
@@ -156,7 +187,7 @@ objset_resize(struct obj_set *set){
 	slot=set->slot;
 	set->cap=cap?cap*2:8;
 	set->cnt=0;
-	set->slot=(struct list_node *)malloc(sizeof(*set->slot)*set->cap);
+	set->slot=(struct list_node *)_malloc(sizeof(*set->slot)*set->cap);
 	for(i=0;i<set->cap;i++){
 		init_list_node(&set->slot[i]);
 	}
@@ -165,7 +196,7 @@ objset_resize(struct obj_set *set){
 			objset_add(set,obj);
 		}
 	}
-	free(slot);
+	_free(slot);
 }
 
 static inline void 
@@ -215,7 +246,7 @@ objset_foreach(struct obj_set *set,void(*callback)(struct aoi_obj *,void* ),void
 
 static inline void
 objset_release(struct obj_set *set){
-	free(set->slot);
+	_free(set->slot);
 }
 
 static inline void
@@ -235,13 +266,14 @@ init_obj_node(struct obj_node *node,int v){
 
 struct aoi_space* 
 aoi_create(){
-	struct aoi_space* aoi=(struct aoi_space*)malloc(sizeof(*aoi));
+	struct aoi_space* aoi=(struct aoi_space*)_malloc(sizeof(*aoi));
 	init_obj_set(&aoi->set);
 	init_obj_node(&aoi->x_root,-1);
 	init_obj_node(&aoi->y_root,-1);
 	aoi_vec_init(&aoi->in);
 	aoi_vec_init(&aoi->out);
 	aoi_vec_init(&aoi->move);
+	STATICS.aoi_count++;
 	return aoi;
 }
 
@@ -258,10 +290,11 @@ aoi_destory(struct aoi_space* aoi){
 	objset_release(&aoi->set);
 	assert(list_empty(&aoi->x_root.list));
 	assert(list_empty(&aoi->y_root.list));
-	aoi_vec_reset(&aoi->in);
-	aoi_vec_reset(&aoi->out);
-	aoi_vec_reset(&aoi->move);
-	free(aoi);
+	aoi_vec_release(&aoi->in);
+	aoi_vec_release(&aoi->out);
+	aoi_vec_release(&aoi->move);
+	STATICS.aoi_count--;
+	_free(aoi);
 	pool_release_obj_node();
 	pool_release_aoi_obj();
 }
@@ -618,4 +651,9 @@ void aoi_printy(struct aoi_space* aoi){
 		printf("%02d,",node->val);
 	}
 	printf("\n");
+}
+
+
+size_t aoi_statics_memory(){
+	return STATICS.memuse;
 }

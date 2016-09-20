@@ -1,13 +1,15 @@
 CC=gcc
 CFLAG=-std=gnu99 -O3 -Wall -Wextra -g
 
-SOURCE:=$(wildcard *.c)
-TARGET:=./test
+TARGET:=test
+LIB:=laoi.so
 
-all:$(TARGET)
+all:$(TARGET) $(LIB)
 
-$(TARGET):$(SOURCE)
+$(TARGET):aoi.c aoi_test.c
 	$(CC) $(CFLAG) $^ -o $@ 
 
+$(LIB):aoi.c laoi.c
+	$(CC) $(CFLAG) -fPIC --shared $^ -o $@
 clean:
-	rm $(TARGET)
+	rm $(TARGET) $(LIB)
