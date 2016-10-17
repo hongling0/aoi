@@ -15,7 +15,6 @@ int aoi_move(struct aoi_space *aoi,int id,int x,int y);
 struct aoi_vec;
 struct aoi_vec* aoi_outvec(struct aoi_space* aoi);
 struct aoi_vec* aoi_invec(struct aoi_space* aoi);
-struct aoi_vec* aoi_movevec(struct aoi_space* aoi);
 
 int aoi_vec_index(struct aoi_vec *v,size_t i);
 void aoi_vec_init(struct aoi_vec *v);

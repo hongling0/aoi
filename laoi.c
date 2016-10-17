@@ -31,8 +31,7 @@ static void laoi_AOI_EVENT(lua_State *L,int id,struct laoi *i){
 	lua_pushinteger(L,id);
 	laoi_insertvec(L,aoi_invec(i->aoi));
 	laoi_insertvec(L,aoi_outvec(i->aoi));
-	laoi_insertvec(L,aoi_movevec(i->aoi));
-	lua_call(L,4,0);
+	lua_call(L,3,0);
 }
 
 static struct laoi* check_aoi(lua_State *L,int idx){

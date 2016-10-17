@@ -17,7 +17,7 @@ local function MEM(s)
 	end
 end
 
-local aoi=AOI.new(5,function(id,intb,outtb,movetb)
+local aoi=AOI.new(5,function(id,intb,outtb)
 	if intb then
 		for _,i in ipairs(intb) do
 			--print(id .." in ".. i)
@@ -26,11 +26,6 @@ local aoi=AOI.new(5,function(id,intb,outtb,movetb)
 	if outtb then
 		for _,i in ipairs(outtb) do
 			--print(id .." out ".. i)
-		end
-	end
-	if movetb then
-		for _,i in ipairs(movetb) do
-			--print(id .." move ".. i)
 		end
 	end
 end)

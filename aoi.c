@@ -19,6 +19,7 @@
 #define AOI_TYPE_IN		2
 #define AOI_TYPE_OUT	3
 
+
 static struct statics{
 	size_t memuse;
 	size_t aoi_count;
@@ -81,7 +82,6 @@ struct aoi_space{
 	struct obj_node y_root;
 	struct aoi_vec in;
 	struct aoi_vec out;
-	struct aoi_vec move;
 };
 
 
@@ -272,7 +272,6 @@ aoi_create(){
 	init_obj_node(&aoi->y_root,-1);
 	aoi_vec_init(&aoi->in);
 	aoi_vec_init(&aoi->out);
-	aoi_vec_init(&aoi->move);
 	STATICS.aoi_count++;
 	return aoi;
 }
@@ -292,7 +291,6 @@ aoi_destory(struct aoi_space* aoi){
 	assert(list_empty(&aoi->y_root.list));
 	aoi_vec_release(&aoi->in);
 	aoi_vec_release(&aoi->out);
-	aoi_vec_release(&aoi->move);
 	STATICS.aoi_count--;
 	_free(aoi);
 	//pool_release_obj_node();
@@ -568,8 +566,6 @@ aoi_move_callback(struct aoi_space *aoi,int id,struct obj_node *node){
 						aoi_vec_append(&aoi->in,obj->id);
 					}else if(x_node->mark==AOI_TYPE_OUT){
 						aoi_vec_append(&aoi->out,obj->id);
-					}else{
-						aoi_vec_append(&aoi->move,obj->id);
 					}
 				}
 			}
@@ -621,9 +617,6 @@ struct aoi_vec* aoi_outvec(struct aoi_space* aoi){
 }
 struct aoi_vec* aoi_invec(struct aoi_space* aoi){
 	return &aoi->in;
-}
-struct aoi_vec* aoi_movevec(struct aoi_space* aoi){
-	return &aoi->move;
 }
 
 int aoi_getpos(struct aoi_space* aoi,int id,int *x,int *y){

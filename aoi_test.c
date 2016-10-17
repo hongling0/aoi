@@ -42,7 +42,6 @@ print_aoi_result(int id,struct aoi_space* aoi,const char *type){
 	printf("%02d[%02d,%02d] %s--------------------------------\n",id,m[id-1][3],m[id-1][4],type);
 	print_vec(aoi_invec(aoi),"in");
 	print_vec(aoi_outvec(aoi),"out");
-	print_vec(aoi_movevec(aoi),"move");
 }
 
 int main(){
